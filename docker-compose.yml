@@ -13,13 +13,12 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
-    security_opt: # this option
-      - seccomp=unconfined
     deploy:
       resources:
         limits:
-          memory: 100M
+          memory: 110M
           cpus: '1'
+
     depends_on:
       - transmission
       - jackett
@@ -44,40 +43,36 @@ services:
       - jackett
     extra_hosts:
       - host.docker.internal:host-gateway
-    security_opt: # this option
-      - seccomp=unconfined
     deploy:
       resources:
         limits:
-          memory: 180M
+          memory: 150M
           cpus: '1'
 
   transmission:
-    image: lscr.io/linuxserver/transmission:latest
+    image: lscr.io/linuxserver/transmission:3.00-r5-ls135
     container_name: transmission
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Sao_Paulo
+      - DOWNLOAD_DIR=/media/external-disk/transmission/downloads/complete
+      - INCOMPLETE_DIR=/media/external-disk/transmission/downloads/incomplete
     volumes:
       - ./transmission-config/settings-default.json:/defaults/settings.json:ro
       - ./transmission-config:/config
+      - ./transmission-config/30-custom-download:/etc/cont-init.d/30-custom-download:ro
       - external-drive:/media/external-disk/
     ports:
       - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
     restart: unless-stopped
-    security_opt: # this option
-      - seccomp=unconfined
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 30M
           cpus: '1' 
     extra_hosts:
       - host.docker.internal:host-gateway
-    entrypoint: ['bash', '/config/entrypoint.sh']
 
   jackett:
     image: lscr.io/linuxserver/jackett:latest
@@ -93,12 +88,10 @@ services:
     ports:
       - 9117:9117
     restart: unless-stopped
-    security_opt: # this option
-      - seccomp=unconfined
     deploy:
       resources:
         limits:
-          memory: 100M
+          memory: 125M
           cpus: '1'
     healthcheck:
       test: [ 'CMD', 'sleep', '60']
@@ -120,3 +113,4 @@ volumes:
     driver_opts:
       type: 'ext4'
       device: /dev/sda1
+      
